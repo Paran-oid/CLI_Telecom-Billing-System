@@ -15,12 +15,21 @@
 #include <windows.h>
 #endif
 
+const char *types[] = {"SMR", "CAR", "DTU", "SUB", "TAX", "PAY"};
+size_t n = sizeof(types) / sizeof(types[0]);
+
+void display_types(void)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        (void)printf("%s ", types[i]);
+    }
+    (void)printf("\n");
+}
+
 void add_record(void)
 {
     (void)srand(time(NULL));
-
-    char *types[] = {"SMR", "CAR", "DTU", "SUB", "TAX", "PAY"};
-    size_t n = sizeof(types) / sizeof(types[0]);
 
     char output[100];
     struct Record rec;
@@ -43,13 +52,9 @@ void add_record(void)
 
         char input_type[3];
         (void)printf("Enter one of the following types:\n");
-        for (size_t i = 0; i < n; i++)
-        {
-            printf("%s ", types[i]);
-        }
-        (void)printf("\n");
+        display_types();
 
-        if ((int)scanf("%s", input_type) == 1)
+        if (((int)scanf("%s", input_type) == 1))
         {
             for (size_t i = 0; i < n; i++)
             {
@@ -61,6 +66,10 @@ void add_record(void)
                     rec.type = i;
                     success = true;
                     break;
+                }
+                else
+                {
+                    (void)printf("Invalid type, please try again later\n");
                 }
             }
         }
@@ -110,9 +119,29 @@ void modify_records(void)
             (void)printf("enter new value\n");
             (void)scanf("%f", &new_item_val);
             (void)snprintf(new_item_val_str, sizeof(new_item_val_str), "%.2f", new_item_val);
-            (void)printf("enter new type\n");
-            if ((int)scanf("%3s", new_item_type) == 1)
+            (void)printf("enter new type (must be one of these)\n");
+            display_types();
+            if (((int)scanf("%3s", new_item_type) == 1))
             {
+                bool found = false;
+                while (!found)
+                {
+                    for (size_t i = 0; i < n; i++)
+                    {
+                        if (strcmp(types[i], new_item_type) == 0)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        printf("Couldn't find item type :/\n Please enter a valid type\n");
+                        (void)scanf("%3s", new_item_type);
+                    }
+                }
+
+                (void)clean();
                 char modified_transc[150];
                 char *building_strs[] =
                     {
@@ -134,7 +163,7 @@ void modify_records(void)
                     (void)sleep(2);
                 }
 
-                free(found_item);
+                (void)free(found_item);
             }
         }
         else

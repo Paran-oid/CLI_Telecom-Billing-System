@@ -72,7 +72,7 @@ char *search_item_file(const char *path, const char *id)
         return buffer_copy;
     }
 
-    fclose(f);
+    (void)fclose(f);
     return NULL;
 }
 
@@ -91,7 +91,7 @@ bool replace_item_file(const char *path, const char *modified_item)
     char *specific_id = (char *)format_id(modified_item);
     bool result = false;
 
-    while (fgets(buffer, sizeof(buffer), f_orig))
+    while ((char *)fgets(buffer, sizeof(buffer), f_orig))
     {
         char *found_id = (char *)format_id(buffer);
         if (strcmp(found_id, specific_id) == 0)
@@ -133,8 +133,6 @@ char *format_id(const char *buffer)
     size_t index;
     char *address_space;
     address_space = strchr(buffer, ' ');
-
-    printf("%s\n", buffer);
 
     index = (int)(address_space - buffer);
     char *found_id = (char *)malloc(sizeof(char) * (3 + 1));
