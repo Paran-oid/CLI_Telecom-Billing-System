@@ -26,7 +26,7 @@ void file_read(const char *path)
     FILE *f = (FILE *)fopen(path, "r");
     if (f == NULL)
     {
-        (void)printf("error allocating memory\n");
+        (void)printf("error opening file/s\n");
         return;
     }
     char buffer[255];
@@ -43,7 +43,7 @@ char *search_item_file(const char *path, const char *id)
 
     if (f == NULL)
     {
-        (void)printf("error allocationg memory\n");
+        (void)printf("error opening file/s\n");
         return NULL;
     }
 
@@ -67,8 +67,8 @@ char *search_item_file(const char *path, const char *id)
     if (found)
     {
         char *buffer_copy = (char *)malloc(sizeof(char) * (sizeof(buffer) + 1));
-        strcpy(buffer_copy, buffer);
-        fclose(f);
+        (void)strcpy(buffer_copy, buffer);
+        (void)fclose(f);
         return buffer_copy;
     }
 
@@ -76,14 +76,15 @@ char *search_item_file(const char *path, const char *id)
     return NULL;
 }
 
-bool replace_item_file(const char *path, const char *modified_item)
+bool replace_item_file(const char *path, const char *modified_item, bool delete_mode)
 {
+
     FILE *f_orig = (FILE *)fopen(path, "r");
     FILE *f_copy = (FILE *)fopen(TEMP_DIR, "w");
 
     if (f_orig == NULL || f_copy == NULL)
     {
-        (void)printf("error allocationg memory\n");
+        (void)printf("error opening file/s\n");
         return false;
     }
 
@@ -91,18 +92,33 @@ bool replace_item_file(const char *path, const char *modified_item)
     char *specific_id = (char *)format_id(modified_item);
     bool result = false;
 
-    while ((char *)fgets(buffer, sizeof(buffer), f_orig))
+    if (!delete_mode)
     {
-        char *found_id = (char *)format_id(buffer);
-        if (strcmp(found_id, specific_id) == 0)
+        while ((char *)fgets(buffer, sizeof(buffer), f_orig))
         {
-            (void)fprintf(f_copy, "%s", modified_item);
-            result = true;
-            continue;
+            char *found_id = (char *)format_id(buffer);
+            if (strcmp(found_id, specific_id) == 0)
+            {
+                (void)fprintf(f_copy, "%s", modified_item);
+                result = true;
+                continue;
+            }
+            (void)fprintf(f_copy, "%s", buffer);
         }
-        (void)fprintf(f_copy, "%s", buffer);
     }
-
+    else
+    {
+        while ((char *)fgets(buffer, sizeof(buffer), f_orig))
+        {
+            char *found_id = (char *)format_id(buffer);
+            if (strcmp(found_id, specific_id) == 0)
+            {
+                result = true;
+                continue;
+            }
+            (void)fprintf(f_copy, "%s", buffer);
+        }
+    }
     (void)fclose(f_orig);
     (void)fclose(f_copy);
 

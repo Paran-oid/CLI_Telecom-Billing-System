@@ -157,7 +157,7 @@ void modify_records(void)
                     (void)strcat(modified_transc, building_strs[i]);
                 }
 
-                if ((bool)replace_item_file(RECORDS_DIR, modified_transc))
+                if ((bool)replace_item_file(RECORDS_DIR, modified_transc, false))
                 {
                     (void)printf("success!\n");
                     (void)sleep(2);
@@ -175,10 +175,61 @@ void modify_records(void)
 }
 void view_payments(void)
 {
+    char c;
+    (void)file_read(RECORDS_DIR);
+    (void)printf("enter any key to continue\n");
+    (void)scanf(" %c", &c);
 }
 void search_records(void)
 {
+    int id;
+    char id_str[3];
+    (void)printf("Enter item id: \n");
+    if ((int)scanf("%d", &id) == 1)
+    {
+        (void)snprintf(id_str, sizeof(id_str), "%d", id);
+        char *transc = (char *)search_item_file(RECORDS_DIR, id_str);
+        if (transc)
+        {
+            (void)printf("%s\n", transc);
+            (void)free(transc);
+
+            char c;
+            (void)printf("enter any key to continue\n");
+            (void)scanf(" %c", &c);
+        }
+        else
+        {
+            (void)printf("Sorry couldn't find an entity with that id \n");
+        }
+    }
 }
 void delete_records(void)
 {
+    int id;
+    char id_str[3];
+    (void)printf("Enter item id: \n");
+    if ((int)scanf("%d", &id) == 1)
+    {
+        (void)snprintf(id_str, sizeof(id_str), "%d", id);
+        char *transc = (char *)search_item_file(RECORDS_DIR, id_str);
+        if (transc)
+        {
+            bool res = (bool)replace_item_file(RECORDS_DIR, transc, true);
+            (void)free(transc);
+            if (res)
+            {
+                (void)printf("success!\n");
+            }
+            else
+            {
+                (void)printf("failure...\n");
+            }
+        }
+        else
+        {
+            (void)printf("Sorry couldn't find an entity with that id \n");
+        }
+        sleep(2);
+    }
 }

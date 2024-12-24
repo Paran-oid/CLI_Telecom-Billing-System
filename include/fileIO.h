@@ -13,6 +13,5 @@ void file_read(const char *path);
 // APP
 
 char *search_item_file(const char *path, const char *id);
-bool replace_item_file(const char *path, const char *modified_item);
-
+bool replace_item_file(const char *path, const char *modified_item, bool delete_mode);
 char *format_id(const char *buffer);
