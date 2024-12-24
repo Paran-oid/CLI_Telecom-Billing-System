@@ -1,5 +1,6 @@
 #include "program.h"
 #include "billing.h"
+#include "userService.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +20,12 @@ void exec(void)
     printf("--Telecom Billing System--\n\n");
     while (true)
     {
+        struct Customer *user = NULL;
+        while (!user)
+        {
+            auth_menu();
+            auth_handler(&user);
+        }
         (void)menu();
         (void)scanf(" %c", &choice);
         if (!map_choice(choice))
@@ -40,6 +47,33 @@ void menu(void)
     (void)printf("5-Search records\n");
     (void)printf("6-Delete records\n");
     (void)printf("q-Quit\n");
+}
+
+void auth_menu(void)
+{
+    (void)printf("You must register/login!\n");
+    (void)printf("1-Login\n");
+    (void)printf("2-Login\n");
+}
+
+void auth_handler(struct Customer **user)
+{
+    unsigned char c;
+    if (scanf(" %c", &c) == 1)
+    {
+        switch (c)
+        {
+        case '1':
+            *user = login_user();
+            break;
+        case '2':
+            *user = register_user();
+            break;
+        default:
+            *user = NULL;
+            break;
+        }
+    }
 }
 
 bool map_choice(unsigned char c)

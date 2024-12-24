@@ -19,6 +19,7 @@ set(SRC_FILES
     src/program.c
     src/fileIO.c
     src/billing.c
+    src/userService.c
     )
 
 

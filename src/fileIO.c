@@ -3,9 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 bool file_write(const char *path, const char *val)
 {
+    assert(path);
+    assert(val);
+
     FILE *f = (FILE *)fopen(path, "a");
     if (f == NULL)
     {
@@ -23,6 +27,8 @@ bool file_write(const char *path, const char *val)
 }
 void file_read(const char *path)
 {
+    assert(path);
+
     FILE *f = (FILE *)fopen(path, "r");
     if (f == NULL)
     {
@@ -39,6 +45,9 @@ void file_read(const char *path)
 
 char *search_item_file(const char *path, const char *id)
 {
+    assert(id);
+    assert(path);
+
     FILE *f = (FILE *)fopen(path, "r");
 
     if (f == NULL)
@@ -78,6 +87,8 @@ char *search_item_file(const char *path, const char *id)
 
 bool replace_item_file(const char *path, const char *modified_item, bool delete_mode)
 {
+    assert(path);
+    assert(modified_item);
 
     FILE *f_orig = (FILE *)fopen(path, "r");
     FILE *f_copy = (FILE *)fopen(TEMP_DIR, "w");
@@ -146,6 +157,8 @@ bool replace_item_file(const char *path, const char *modified_item, bool delete_
 
 char *format_id(const char *buffer)
 {
+    assert(buffer);
+
     size_t index;
     char *address_space;
     address_space = strchr(buffer, ' ');

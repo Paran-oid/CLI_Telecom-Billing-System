@@ -3,7 +3,7 @@
 // expand customer model later on
 struct Customer
 {
-    // unsigned int id;
+    unsigned int id;
     char *name;
-    // char *password;
+    char *password;
 };
