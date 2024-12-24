@@ -1,7 +1,9 @@
 #include "program.h"
 
+#include <stdlib.h>
+
 int main(void)
 {
     exec();
-    return 0;
+    return EXIT_SUCCESS;
 }

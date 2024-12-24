@@ -7,66 +7,91 @@
 #include <string.h>
 #include <time.h>
 
-struct Customer *register_user(void)
+void *register_user(void)
 {
     char *username = (char *)malloc(sizeof(char) * (50 + 1));
     char *password = (char *)malloc(sizeof(char) * (20 + 1));
 
-    printf("enter a username:\n");
-    if (scanf("%50s", username) == 1)
+    (void)printf("enter a username:\n");
+    if ((int)scanf("%50s", username) != 1)
     {
-        printf("entered a password:\n");
-        if (scanf("%20s", password) == 1)
-        {
-            struct Customer *user;
-            user = create_user(username, password);
-            char user_str[70] = "";
-            snprintf(user_str, sizeof(user_str), "%d", user->id);
-            strcat(user_str, " ");
-            strcat(user_str, user->name);
-            strcat(user_str, " ");
-            strcat(user_str, user->password);
-
-            if (user)
-            {
-                file_write(USERS_DIR, user_str);
-                return user;
-            }
-        }
+        (void)printf("invalid username\n");
+        return NULL;
     }
+    (void)printf("entered a password:\n");
+    if ((int)scanf("%20s", password) != 1)
+    {
+        (void)printf("Invalid password\n");
+        return NULL;
+    }
+
+    struct Customer *user;
+    user = (struct Customer *)create_user(username, password);
+    char user_str[70] = "";
+    (void)snprintf(user_str, sizeof(user_str), "%d", user->id);
+    (void)strcat(user_str, " ");
+    (void)strcat(user_str, user->name);
+    (void)strcat(user_str, " ");
+    (void)strcat(user_str, user->password);
+
+    if (!user)
+    {
+        (void)printf("there was an error creating your account\n");
+    }
+
+    (void)file_write(USERS_DIR, user_str);
+    return user;
 }
-struct Customer *login_user(void)
+void *login_user(void)
 {
+    char id_str[4];
     char username[50];
     char password[20];
-    printf("enter a username:\n");
-    if (scanf("%50s", username) == 1)
+    (void)printf("enter a username:\n");
+    if ((int)scanf("%50s", username) != 1)
     {
-        printf("entered a password:\n");
-        if (scanf("%20s", password) == 1)
-        {
-            char user_str[70];
-            struct Customer *user;
-            // user_str = search_item_file(username, password);
-            char user_str[70];
-            strcat(user_str, username);
-            strcat(user_str, " ");
-            strcat(user_str, password);
-
-            if (user)
-            {
-                file_write(USERS_DIR, user_str);
-                return user;
-            }
-        }
+        (void)printf("invalid username\n");
+        return NULL;
     }
+
+    (void)printf("entered a password:\n");
+    if ((int)scanf("%20s", password) != 1)
+    {
+        (void)printf("invalid password\n");
+    }
+
+    struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
+
+    char *user_str = search_user_in_file(USERS_DIR, username);
+
+    if (!user)
+    {
+        (void)printf("Invalid credentials\n");
+    }
+
+    // get user id
+    snprintf(id_str, sizeof(id_str), "%d", )
+
+        (void) strcat(user_str, );
+    (void)strcat(user_str, username);
+    (void)strcat(user_str, " ");
+    (void)strcat(user_str, password);
+
+    if (!user)
+    {
+        (void)printf("Sorry we couldn't log you in :( \n");
+    }
+
+    if (strcmp())
+
+        return user;
 }
 
 struct Customer *create_user(char *username, char *password)
 {
-    srand(time(NULL));
+    (void)srand(time(NULL));
     struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
-    user->id = 1 + (rand() % (1000));
+    user->id = 1 + ((int)rand() % (1000));
     user->name = username;
     user->password = password;
 
@@ -75,7 +100,7 @@ struct Customer *create_user(char *username, char *password)
 
 void destroy_user(struct Customer *user)
 {
-    free(user->name);
-    free(user->password);
-    free(user);
+    (void)free(user->name);
+    (void)free(user->password);
+    (void)free(user);
 }

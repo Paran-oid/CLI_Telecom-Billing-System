@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
+// GENERAL
 bool file_write(const char *path, const char *val)
 {
     assert(path);
@@ -25,6 +26,7 @@ bool file_write(const char *path, const char *val)
     (void)fclose(f);
     return true;
 }
+
 void file_read(const char *path)
 {
     assert(path);
@@ -43,7 +45,8 @@ void file_read(const char *path)
     (void)fclose(f);
 }
 
-char *search_item_file(const char *path, const char *id)
+// TRANSACTION SECTION
+char *search_transaction_in_file(const char *path, const char *id)
 {
     assert(id);
     assert(path);
@@ -85,7 +88,7 @@ char *search_item_file(const char *path, const char *id)
     return NULL;
 }
 
-bool replace_item_file(const char *path, const char *modified_item, bool delete_mode)
+bool replace_transaction_in_file(const char *path, const char *modified_item, bool delete_mode)
 {
     assert(path);
     assert(modified_item);
@@ -110,20 +113,10 @@ bool replace_item_file(const char *path, const char *modified_item, bool delete_
             char *found_id = (char *)format_id(buffer);
             if (strcmp(found_id, specific_id) == 0)
             {
-                (void)fprintf(f_copy, "%s", modified_item);
-                result = true;
-                continue;
-            }
-            (void)fprintf(f_copy, "%s", buffer);
-        }
-    }
-    else
-    {
-        while ((char *)fgets(buffer, sizeof(buffer), f_orig))
-        {
-            char *found_id = (char *)format_id(buffer);
-            if (strcmp(found_id, specific_id) == 0)
-            {
+                if (!delete_mode)
+                {
+                    (void)fprintf(f_copy, "%s", modified_item);
+                }
                 result = true;
                 continue;
             }
@@ -155,21 +148,71 @@ bool replace_item_file(const char *path, const char *modified_item, bool delete_
     return result;
 }
 
-char *format_id(const char *buffer)
+char *format_transaction_from_id(const char *buffer)
 {
-    assert(buffer);
-
-    size_t index;
-    char *address_space;
-    address_space = strchr(buffer, ' ');
-
-    index = (int)(address_space - buffer);
-    char *found_id = (char *)malloc(sizeof(char) * (3 + 1));
-
-    for (size_t i = 0; i < index; i++)
     {
-        found_id[i] = buffer[i];
+        assert(buffer);
+
+        size_t index;
+        char *address_space;
+        address_space = strchr(buffer, ' ');
+
+        index = (int)(address_space - buffer);
+        char *found_id = (char *)malloc(sizeof(char) * (3 + 1));
+
+        for (size_t i = 0; i < index; i++)
+        {
+            found_id[i] = buffer[i];
+        }
+        found_id[index] = '\0';
+        return found_id;
     }
-    found_id[index] = '\0';
-    return found_id;
 }
+
+// AUTH SECTION
+
+char *search_user_in_file(const char *path, const char *username)
+{
+    FILE *f = fopen(USERS_DIR, "r");
+
+    bool found = false;
+    char *found_user = malloc(sizeof(char) * (255 + 1));
+    char buffer[255];
+    while (fgets(buffer, sizeof(buffer), f))
+    {
+        const char *received_username = (char *)format_username_from_stream(buffer);
+        if ((int)strcmp(received_username, buffer) == 0)
+        {
+            (void)memcpy(found_user, buffer, strlen(buffer));
+            found = true;
+            break;
+        }
+    }
+
+    return found ? found_user : NULL;
+}
+
+char *format_username_from_stream(const char *input)
+{
+    char *pos = strchr(input, ' ');
+
+    if (!pos)
+    {
+        return NULL;
+    }
+
+    size_t start = pos - input;
+    size_t curr = pos - input;
+
+    while (input[curr])
+    {
+        curr++;
+    }
+
+    char *username = (char *)malloc(sizeof(char) * (50 + 1));
+    memcpy(username, input + start, curr - start);
+
+    return username;
+}
+
+// MIX

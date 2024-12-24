@@ -53,7 +53,7 @@ void auth_menu(void)
 {
     (void)printf("You must register/login!\n");
     (void)printf("1-Login\n");
-    (void)printf("2-Login\n");
+    (void)printf("2-Register\n");
 }
 
 void auth_handler(struct Customer **user)
@@ -64,10 +64,10 @@ void auth_handler(struct Customer **user)
         switch (c)
         {
         case '1':
-            *user = login_user();
+            *user = (struct Customer *)login_user();
             break;
         case '2':
-            *user = register_user();
+            *user = (struct Customer *)register_user();
             break;
         default:
             *user = NULL;
