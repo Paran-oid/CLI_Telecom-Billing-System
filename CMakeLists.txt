@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31.3)
+cmake_minimum_required(VERSION 3.31.0)
 
 # project init
 set(PROJECT_NAME TBS)
