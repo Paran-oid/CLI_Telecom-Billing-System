@@ -1,13 +1,13 @@
 #include "billing.h"
 #include "record.h"
 #include "fileIO.h"
-#include "program.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
 #include <string.h>
+#include <assert.h>
 
 #if defined(__linux__)
 #include <unistd.h>
@@ -22,13 +22,15 @@ void display_types(void)
 {
     for (size_t i = 0; i < n; i++)
     {
-        (void)printf("%s ", types[i]);
+        (void)printf("%s ", (const char *)types[i]);
     }
     (void)printf("\n");
 }
 
-void add_record(void)
+void add_record(const char *working_dir)
 {
+    printf("working dir is%s\n", working_dir);
+    assert(working_dir);
     (void)srand(time(NULL));
 
     char output[100];
@@ -37,6 +39,8 @@ void add_record(void)
 
     char rec_id_str[3];
     char rec_value_str[10];
+
+    // TODO: ENTER A WHILE LOOP UNTIL THE ID IS NOT IN THE FILE!
 
     rec.id = 1 + ((int)rand() % (100));
 
@@ -52,7 +56,7 @@ void add_record(void)
 
         char input_type[3];
         (void)printf("Enter one of the following types:\n");
-        display_types();
+        (void)display_types();
 
         if (((int)scanf("%s", input_type) == 1))
         {
@@ -67,59 +71,61 @@ void add_record(void)
                     success = true;
                     break;
                 }
-                else
-                {
-                    (void)printf("Invalid type, please try again later\n");
-                }
             }
         }
+
+        fprintf(stderr, "Invalid type...\n");
     }
 
     if (success)
     {
-        (void)printf("entered to success section \n");
-        if ((bool)file_write(RECORDS_DIR, output))
+        if ((bool)file_write(working_dir, output))
         {
             (void)printf("Successfully added record!\n");
         }
         else
         {
-            (void)printf("There was an error adding the record\n");
+            fprintf(stderr, "There was an error adding the record\n");
         }
     }
     else
     {
-        (void)printf("Please verify your inputs next time\n");
+        fprintf(stderr, "Please verify your inputs\n");
     }
 }
-void view_records(void)
+
+void view_records(const char *working_dir)
 {
+    assert(working_dir);
     char temp;
-    (void)file_read(RECORDS_DIR);
-    (void)printf("enter anything to continue...\n");
+    (void)file_read(working_dir);
+    (void)printf("Enter anything to continue...\n");
     (void)scanf(" %c", &temp);
 }
-void modify_records(void)
+
+void modify_records(const char *working_dir)
 {
+    assert(working_dir);
+
     int transc_id;
     char transc_id_str[100];
-    char *found_item;
+    char *found_item = NULL;
 
-    (void)printf("enter item ID\n");
+    (void)printf("Enter item ID\n");
     if ((int)scanf(" %d", &transc_id) == 1)
     {
         (void)snprintf(transc_id_str, sizeof(transc_id), "%d", transc_id);
-        found_item = (char *)search_in_file(RECORDS_DIR, ID, transc_id_str, TRANSACTION);
+        found_item = (char *)search_in_file(working_dir, ID, transc_id_str, TRANSACTION);
         if (!(found_item == NULL))
         {
             float new_item_val = 0.00f;
             char new_item_val_str[50];
             char new_item_type[3];
 
-            (void)printf("enter new value\n");
+            (void)printf("Enter new value\n");
             (void)scanf("%f", &new_item_val);
             (void)snprintf(new_item_val_str, sizeof(new_item_val_str), "%.2f", new_item_val);
-            (void)printf("enter new type (must be one of these)\n");
+            (void)printf("Enter new type (must be one of these)\n");
             display_types();
             if (((int)scanf("%3s", new_item_type) == 1))
             {
@@ -136,12 +142,11 @@ void modify_records(void)
                     }
                     if (!found)
                     {
-                        printf("Couldn't find item type :/\n Please enter a valid type\n");
+                        fprintf(stderr, "Couldn't find item type :/\n Please enter a valid type\n");
                         (void)scanf("%3s", new_item_type);
                     }
                 }
 
-                (void)clean();
                 char modified_transc[150];
                 char *building_strs[] =
                     {
@@ -157,9 +162,10 @@ void modify_records(void)
                     (void)strcat(modified_transc, building_strs[i]);
                 }
 
-                if ((bool)replace_in_file(RECORDS_DIR, modified_transc, TRANSACTION, false))
+                // TODO: make it successfully replace
+                if ((bool)replace_in_file(working_dir, modified_transc, TRANSACTION, false))
                 {
-                    (void)printf("success!\n");
+                    (void)printf("Success!\n");
                     (void)sleep(2);
                 }
 
@@ -168,67 +174,79 @@ void modify_records(void)
         }
         else
         {
-            (void)printf("couldn't find item\n");
+            fprintf(stderr, "Couldn't find item\n");
             (void)sleep(2);
         }
     }
 }
-void view_payments(void)
+
+void view_payments(const char *working_dir)
 {
+    assert(working_dir);
+
     char c;
-    (void)file_read(RECORDS_DIR);
-    (void)printf("enter any key to continue\n");
+    (void)file_read(working_dir);
+    (void)printf("Enter any key to continue\n");
     (void)scanf(" %c", &c);
 }
-void search_records(void)
+
+void search_records(const char *working_dir)
 {
+    assert(working_dir);
+
     int id;
     char id_str[3];
     (void)printf("Enter item id: \n");
     if ((int)scanf("%d", &id) == 1)
     {
         (void)snprintf(id_str, sizeof(id_str), "%d", id);
-        char *transc = (char *)search_in_file(RECORDS_DIR, ID, id_str, TRANSACTION);
+        char *transc = (char *)search_in_file(working_dir, ID, id_str, TRANSACTION);
         if (transc)
         {
             (void)printf("%s\n", transc);
             (void)free(transc);
 
             char c;
-            (void)printf("enter any key to continue\n");
+            (void)printf("Enter any key to continue\n");
             (void)scanf(" %c", &c);
         }
         else
         {
-            (void)printf("Sorry couldn't find an entity with that id \n");
+            fprintf(stderr, "Sorry couldn't find an entity with that id\n");
+            sleep(2);
         }
     }
 }
-void delete_records(void)
+
+void delete_records(const char *working_dir)
 {
+    assert(working_dir);
+
+    // TODO: make it successfully delete
+
     int id;
     char id_str[3];
     (void)printf("Enter item id: \n");
     if ((int)scanf("%d", &id) == 1)
     {
         (void)snprintf(id_str, sizeof(id_str), "%d", id);
-        char *transc = (char *)search_in_file(RECORDS_DIR, ID, id_str, TRANSACTION);
+        char *transc = (char *)search_in_file(working_dir, ID, id_str, TRANSACTION);
         if (transc)
         {
-            bool res = (bool)replace_in_file(RECORDS_DIR, transc, TRANSACTION, true);
+            bool res = (bool)replace_in_file(working_dir, transc, TRANSACTION, true);
             (void)free(transc);
             if (res)
             {
-                (void)printf("success!\n");
+                (void)printf("Success!\n");
             }
             else
             {
-                (void)printf("failure...\n");
+                fprintf(stderr, "Failure...\n");
             }
         }
         else
         {
-            (void)printf("Sorry couldn't find an entity with that id \n");
+            fprintf(stderr, "Sorry couldn't find an entity with that id\n");
         }
         sleep(2);
     }

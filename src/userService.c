@@ -12,37 +12,38 @@ void *register_user(void)
     char *username = (char *)malloc(sizeof(char) * (50 + 1));
     char *password = (char *)malloc(sizeof(char) * (20 + 1));
 
-    (void)printf("enter a username:\n");
-    if ((int)scanf("%50s", username) != 1)
+    printf("Enter a username:\n");
+    if (scanf("%50s", username) != 1)
     {
-        (void)printf("invalid username\n");
+        fprintf(stderr, "Invalid username\n");
         return NULL;
     }
-    (void)printf("entered a password:\n");
-    if ((int)scanf("%20s", password) != 1)
+    printf("Enter a password:\n");
+    if (scanf("%20s", password) != 1)
     {
-        (void)printf("Invalid password\n");
+        fprintf(stderr, "Invalid password\n");
         return NULL;
     }
 
     struct Customer *user;
-    user = (struct Customer *)create_user(username, password);
+    user = create_user(username, password);
     char user_str[70] = "";
-    (void)snprintf(user_str, sizeof(user_str), "%d", user->id);
-    (void)strcat(user_str, " ");
-    (void)strcat(user_str, user->name);
-    (void)strcat(user_str, " ");
-    (void)strcat(user_str, user->password);
+    snprintf(user_str, sizeof(user_str), "%d", user->id);
+    strcat(user_str, " ");
+    strcat(user_str, user->name);
+    strcat(user_str, " ");
+    strcat(user_str, user->password);
+    strcat(user_str, "\n");
 
     if (!user)
     {
-        (void)printf("there was an error creating your account\n");
+        fprintf(stderr, "There was an error creating your account\n");
     }
 
-    (void)file_write(USERS_DIR, user_str);
+    file_write(USERS_DIR, user_str);
 
-    (void)free(username);
-    (void)free(password);
+    free(username);
+    free(password);
 
     return user;
 }
@@ -52,52 +53,60 @@ void *login_user(void)
     char username[50];
     char password[20];
 
-    (void)printf("enter a username:\n");
-    if ((int)scanf("%50s", username) != 1)
+    printf("Enter a username:\n");
+    if (scanf("%50s", username) != 1)
     {
-        (void)printf("invalid username\n");
+        fprintf(stderr, "Invalid username\n");
         return NULL;
     }
 
-    (void)printf("entered a password:\n");
-    if ((int)scanf("%20s", password) != 1)
+    printf("Enter a password:\n");
+    if (scanf("%20s", password) != 1)
     {
-        (void)printf("invalid password\n");
+        fprintf(stderr, "Invalid password\n");
+        return NULL;
     }
 
     struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
 
     char *found_user = search_in_file(USERS_DIR, USERNAME, username, USER);
-    char user_str[100];
 
-    if (!user)
+    if (!found_user)
     {
-        (void)printf("Invalid credentials\n");
+        fprintf(stderr, "Invalid credentials\n");
         return NULL;
     }
 
+    char user_str[100] = "";
+
     char *id_str = format_from_stream(ID, found_user);
 
-    (void)strcat(user_str, id_str);
-    (void)strcat(user_str, " ");
-    (void)strcat(user_str, username);
-    (void)strcat(user_str, " ");
-    (void)strcat(user_str, password);
+    strcat(user_str, id_str);
+    strcat(user_str, " ");
+    strcat(user_str, username);
+    strcat(user_str, " ");
+    strcat(user_str, password);
 
-    if (!user || strcmp(user_str, found_user) != 0)
+    if (strcmp(user_str, found_user) != 0)
     {
-        (void)printf("Wrong Credentials, Please try again.");
+        fprintf(stderr, "Wrong credentials, please try again.\n");
+        return NULL;
     }
 
-    (void)free(found_user);
+    user->id = atoi(id_str);
+    user->name = username;
+    user->password = password;
+
+    free(found_user);
+
     return user;
 }
 
 struct Customer *create_user(char *username, char *password)
 {
-    (void)srand(time(NULL));
+    srand(time(NULL));
     struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
-    user->id = 1 + ((int)rand() % (1000));
+    user->id = 1 + (rand() % 1000);
     user->name = username;
     user->password = password;
 
@@ -106,7 +115,7 @@ struct Customer *create_user(char *username, char *password)
 
 void destroy_user(struct Customer *user)
 {
-    (void)free(user->name);
-    (void)free(user->password);
-    (void)free(user);
+    free(user->name);
+    free(user->password);
+    free(user);
 }

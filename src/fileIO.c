@@ -1,28 +1,68 @@
 #include "fileIO.h"
+#include "customer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
+char *form_working_dir(struct Customer *user)
+{
+    assert(user);
+    const size_t MAX_SIZE = 400;
+
+    char *wd = (char *)calloc((MAX_SIZE + 1), sizeof(char));
+    // + 4 for .txt and /
+    if ((size_t)strlen(TEMPLATE_RECORDS_DIR) + (size_t)strlen(user->name) + 4 < MAX_SIZE)
+    {
+        (void)strncat(wd, TEMPLATE_RECORDS_DIR, MAX_SIZE - (size_t)strlen(wd));
+        (void)strncat(wd, user->name, MAX_SIZE - (size_t)strlen(wd));
+        struct stat st = {0};
+
+        if ((int)stat(wd, &st) == -1)
+        {
+            if ((int)mkdir(wd, 0700) != 0)
+            {
+                (void)fprintf(stderr, "Erorr creating directory\n");
+                (void)free(wd);
+                return NULL;
+            }
+        }
+
+        (void)strncat(wd, "/records.txt", MAX_SIZE - (size_t)strlen(wd));
+        return wd;
+    }
+    else
+    {
+        fprintf(stderr, "Error: Combined length of TEMPLATE_RECORDS_DIR and user name exceeds limit.\n");
+        free(wd);
+        return NULL;
+    }
+}
+
 bool file_write(const char *path, const char *val)
 {
     assert(path);
     assert(val);
 
-    FILE *f = (FILE *)fopen(path, "a");
+    FILE *f = fopen(path, "a");
     if (f == NULL)
     {
-        (void)printf("error opening file\n");
+        fprintf(stderr, "Error opening file\n");
         return false;
     }
-    if ((int)fprintf(f, "%s", val) < 0)
+
+    if (fprintf(f, "%s", val) < 0)
     {
-        (void)fclose(f);
-        (void)printf("error writing to file\n");
+        fclose(f);
+        fprintf(stderr, "Error writing to file\n");
         return false;
     }
-    (void)fclose(f);
+
+    fclose(f);
     return true;
 }
 
@@ -30,39 +70,40 @@ void file_read(const char *path)
 {
     assert(path);
 
-    FILE *f = (FILE *)fopen(path, "r");
+    FILE *f = fopen(path, "r");
+
     if (f == NULL)
     {
-        (void)printf("error opening file/s\n");
+        fprintf(stderr, "Error opening file/s\n");
         return;
     }
     char buffer[255];
-    while ((char *)fgets(buffer, sizeof(buffer), f))
+
+    while (fgets(buffer, sizeof(buffer), f))
     {
-        (void)printf("%s\n", buffer);
+        printf("%s\n", buffer);
     }
-    (void)fclose(f);
+    fclose(f);
 }
 
 char *search_in_file(const char *path, enum formatType format, const char *info, enum itemType item_type)
 {
     assert(info);
     assert(path);
-    assert(item_type);
 
     if (item_type == TRANSACTION)
     {
         if (format != ID)
         {
-            (void)printf("invalid format\n");
+            fprintf(stderr, "Invalid format\n");
             return NULL;
         }
 
-        FILE *f = (FILE *)fopen(path, "r");
+        FILE *f = fopen(path, "r");
 
         if (f == NULL)
         {
-            (void)printf("error opening file/s\n");
+            fprintf(stderr, "Error opening file/s\n");
             return NULL;
         }
 
@@ -70,14 +111,10 @@ char *search_in_file(const char *path, enum formatType format, const char *info,
 
         char buffer[255];
 
-        while ((char *)fgets(buffer, sizeof(buffer), f))
+        while (fgets(buffer, sizeof(buffer), f))
         {
-            char *found_id = (char *)format_from_stream(ID, buffer);
-            if (found_id == NULL)
-            {
-                continue;
-            }
-            if ((int)strcmp(found_id, info) == 0)
+            char *found_id = format_from_stream(ID, buffer);
+            if (strcmp(found_id, info) == 0)
             {
                 found = true;
                 break;
@@ -85,43 +122,65 @@ char *search_in_file(const char *path, enum formatType format, const char *info,
         }
         if (found)
         {
-            char *buffer_copy = (char *)malloc(sizeof(char) * (sizeof(buffer) + 1));
+            size_t len = strlen(buffer);
+            if (buffer[len - 1] == '\n')
+            {
+                buffer[len - 1] = '\0';
+            }
+            char *buffer_copy = malloc(strlen(buffer) + 1);
+
+            if (!buffer_copy)
+            {
+                fprintf(stderr, "There was an error processing your transaction's string\n");
+                return NULL;
+            }
+
             (void)strcpy(buffer_copy, buffer);
             (void)fclose(f);
             return buffer_copy;
         }
 
-        (void)fclose(f);
+        fclose(f);
         return NULL;
     }
+
     else if (item_type == USER)
     {
         if (format != USERNAME)
         {
-            (void)printf("invalid format\n");
+            fprintf(stderr, "Invalid format\n");
             return NULL;
         }
 
         FILE *f = fopen(USERS_DIR, "r");
 
         bool found = false;
-        char *found_user = malloc(sizeof(char) * (255 + 1));
+        char *found_user = malloc(256);
         char buffer[255];
         while (fgets(buffer, sizeof(buffer), f))
         {
-            const char *received_username = (char *)format_from_stream(USERNAME, buffer);
-            if ((int)strcmp(received_username, buffer) == 0)
+            const char *received_username = format_from_stream(USERNAME, buffer);
+            if (strcmp(received_username, info) == 0)
             {
-                (void)memcpy(found_user, buffer, strlen(buffer));
+                // we should be careful not to get \n
+                size_t len = strlen(buffer);
+                if (buffer[len - 1] == '\n')
+                {
+                    buffer[len - 1] = '\0';
+                }
+
+                memcpy(found_user, buffer, strlen(buffer));
                 found = true;
                 break;
             }
         }
+        fclose(f);
         return found ? found_user : NULL;
     }
+
     else
     {
-        printf("invalid data\n");
+        fprintf(stderr, "Invalid data\n");
         return NULL;
     }
 }
@@ -130,118 +189,127 @@ bool replace_in_file(const char *path, const char *modified_item, enum itemType 
 {
     assert(path);
     assert(modified_item);
-    assert(item_type);
-    assert(delete_mode);
+
     if (item_type == TRANSACTION)
     {
 
-        FILE *f_orig = (FILE *)fopen(path, "r");
-        FILE *f_copy = (FILE *)fopen(TEMP_DIR, "w");
+        FILE *f_orig = fopen(path, "r");
+        FILE *f_copy = fopen(TEMP_DIR, "w");
 
         if (f_orig == NULL || f_copy == NULL)
         {
-            (void)printf("error opening file/s\n");
+            fprintf(stderr, "Error opening file/s\n");
             return false;
         }
 
         char buffer[255];
-        char *specific_id = (char *)format_from_stream(ID, modified_item);
+        char *specific_id = format_from_stream(ID, modified_item);
         bool result = false;
 
         if (!delete_mode)
         {
-            while ((char *)fgets(buffer, sizeof(buffer), f_orig))
+            while (fgets(buffer, sizeof(buffer), f_orig))
             {
-                char *found_id = (char *)format_from_stream(ID, buffer);
-                if ((int)strcmp(found_id, specific_id) == 0)
+                char *found_id = format_from_stream(ID, buffer);
+                if (strcmp(found_id, specific_id) == 0)
                 {
                     if (!delete_mode)
                     {
-                        (void)fprintf(f_copy, "%s", modified_item);
+                        fprintf(f_copy, "%s", modified_item);
                     }
                     result = true;
                     continue;
                 }
-                (void)fprintf(f_copy, "%s", buffer);
+                fprintf(f_copy, "%s", buffer);
             }
         }
-        (void)fclose(f_orig);
-        (void)fclose(f_copy);
+        fclose(f_orig);
+        fclose(f_copy);
 
-        f_orig = (FILE *)fopen(path, "w");
-        f_copy = (FILE *)fopen(TEMP_DIR, "r");
+        f_orig = fopen(path, "w");
+        f_copy = fopen(TEMP_DIR, "r");
 
         if (f_orig == NULL || f_copy == NULL)
         {
-            (void)printf("error allocationg memory\n");
+            fprintf(stderr, "Error allocating memory\n");
             return false;
         }
 
         while (fgets(buffer, sizeof(buffer), f_copy))
         {
-            (void)fprintf(f_orig, "%s", buffer);
+            fprintf(f_orig, "%s", buffer);
         }
 
-        (void)fclose(f_orig);
-        (void)fclose(f_copy);
+        fclose(f_orig);
+        fclose(f_copy);
 
-        (void)remove(TEMP_DIR);
+        remove(TEMP_DIR);
 
         return result;
     }
+
     else
     {
-        printf("invalid input\n");
+        fprintf(stderr, "Invalid input\n");
         return NULL;
     }
 }
 
 char *format_from_stream(enum formatType format, const char *stream)
 {
-    assert(stream);
-    assert(format);
+    if (stream == NULL)
+    {
+        return NULL;
+    }
 
     if (format == USERNAME)
     {
-        char *pos = strchr(stream, ' ');
+        char *ptr_fspace = strchr(stream, ' ');
 
-        if (!pos)
+        if (!ptr_fspace)
         {
             return NULL;
         }
 
-        size_t start = pos - stream;
-        size_t curr = pos - stream;
+        size_t start = ptr_fspace - stream + 1;
+        size_t curr = ptr_fspace - stream + 1;
 
-        while (stream[curr])
+        while (stream[curr] != ' ')
         {
             curr++;
         }
 
-        char *username = (char *)malloc(sizeof(char) * (50 + 1));
+        char *username = malloc(51);
         memcpy(username, stream + start, curr - start);
+        username[curr - start] = '\0';
 
         return username;
     }
+
     else if (format == ID)
     {
-        size_t index;
-        char *address_space;
-        address_space = strchr(stream, ' ');
+        char *ptr_fspace = strchr(stream, ' ');
 
-        index = (int)(address_space - stream);
-        char *found_id = (char *)malloc(sizeof(char) * (3 + 1));
+        if (!ptr_fspace)
+        {
+            fprintf(stderr, "Invalid stream\n");
+            return NULL;
+        }
 
-        for (size_t i = 0; i < index; i++)
+        size_t pos_fspace = ptr_fspace - stream;
+        char *found_id = malloc(5);
+
+        for (size_t i = 0; i < pos_fspace; i++)
         {
             found_id[i] = stream[i];
         }
-        found_id[index] = '\0';
+        found_id[pos_fspace] = '\0';
         return found_id;
     }
+
     else
     {
-        printf("invalid stream\n");
+        fprintf(stderr, "Invalid stream\n");
         return NULL;
     }
 }

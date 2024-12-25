@@ -23,7 +23,7 @@ jobs:
 
             - name: Build
               run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-              timeout-minutes: 1
+              timeout-minutes: 10
 
             - name: Test
               working-directory: ${{github.workspace}}/build

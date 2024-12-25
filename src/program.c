@@ -1,11 +1,14 @@
 #include "program.h"
 #include "billing.h"
 #include "userService.h"
+#include "customer.h"
+#include "fileIO.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <string.h>
 
 #if defined(__linux__)
 #include <unistd.h>
@@ -15,38 +18,35 @@
 
 void exec(void)
 {
+    printf("--Telecom Billing System--\n\n");
+
+    struct Customer *user = NULL;
+    char *working_dir = NULL;
     unsigned char choice;
 
-    printf("--Telecom Billing System--\n\n");
     while (true)
     {
-        struct Customer *user = NULL;
         while (!user)
         {
-            auth_menu();
-            auth_handler(&user);
+            (void)auth_menu();
+            (void)auth_handler(&user);
         }
+
+        if (!working_dir)
+        {
+            working_dir = (char *)form_working_dir(user);
+        }
+
         (void)menu();
         (void)scanf(" %c", &choice);
-        if (!map_choice(choice))
+        if (!map_choice(choice, working_dir))
         {
+            free(working_dir);
             break;
         }
         (void)clean();
     }
-    (void)printf("--End Program--\n");
-}
-
-void menu(void)
-{
-    (void)printf("Choose one of the following:\n");
-    (void)printf("1-Add new record\n");
-    (void)printf("2-View list of records\n");
-    (void)printf("3-Modify records\n");
-    (void)printf("4-View payment\n");
-    (void)printf("5-Search records\n");
-    (void)printf("6-Delete records\n");
-    (void)printf("q-Quit\n");
+    printf("--Thank you for trying my program!\n");
 }
 
 void auth_menu(void)
@@ -76,34 +76,49 @@ void auth_handler(struct Customer **user)
     }
 }
 
-bool map_choice(unsigned char c)
+void menu(void)
+{
+    (void)printf("Choose one of the following:\n");
+    (void)printf("1-Add new record\n");
+    (void)printf("2-View list of records\n");
+    (void)printf("3-Modify records\n");
+    (void)printf("4-View payment\n");
+    (void)printf("5-Search records\n");
+    (void)printf("6-Delete records\n");
+    (void)printf("q-Quit\n");
+}
+
+bool map_choice(unsigned char c, const char *working_dir)
 {
     clean();
-    bool leave = true;
+    bool stay = true;
     switch (c)
     {
     case '1':
-        (void)add_record();
+        (void)add_record(working_dir);
         break;
     case '2':
-        (void)view_records();
+        (void)view_records(working_dir);
         break;
     case '3':
-        (void)modify_records();
+        (void)modify_records(working_dir);
         break;
     case '4':
-        (void)view_payments();
+        (void)view_payments(working_dir);
         break;
     case '5':
-        (void)search_records();
+        (void)search_records(working_dir);
         break;
     case '6':
-        (void)delete_records();
+        (void)delete_records(working_dir);
+        break;
+    case 'q':
+        stay = false;
         break;
     default:
-        leave = false;
+        break;
     }
-    return leave;
+    return stay;
 }
 
 void clean()
@@ -114,6 +129,6 @@ void clean()
     (void)system("cls");
 #else
     // In case of an unsupported platform, you can add a message or default action
-    printf("\n[Error] Unsupported platform for clearing the screen.\n");
+    fprintf(stderr, "\n[Error] Unsupported platform for clearing the screen.\n");
 #endif
 }

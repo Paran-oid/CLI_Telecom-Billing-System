@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 
+#define TEMPLATE_RECORDS_DIR "../data/users/"
 #define USERS_DIR "../data/users.txt"
-#define RECORDS_DIR "../data/users/aziz_records.txt"
 #define TEMP_DIR "../data/users/temp.txt"
 
 enum formatType
@@ -18,6 +18,10 @@ enum itemType
     USER,
     TRANSACTION
 };
+
+struct Customer;
+
+char *form_working_dir(struct Customer *user);
 
 bool file_write(const char *path, const char *val);
 void file_read(const char *path);
