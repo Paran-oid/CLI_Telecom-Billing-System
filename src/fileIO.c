@@ -79,7 +79,7 @@ void file_read(const char *path)
     }
     char buffer[255];
 
-    while ((int)fgets(buffer, sizeof(buffer), f))
+    while ((char *)fgets(buffer, sizeof(buffer), f))
     {
         printf("%s\n", buffer);
     }
@@ -103,7 +103,7 @@ char *search_in_file(const char *path, enum formatType format, const char *info)
 
     char buffer[255];
 
-    while ((int)fgets(buffer, sizeof(buffer), f))
+    while ((char *)fgets(buffer, sizeof(buffer), f))
     {
         char *found_item = (char *)format_from_stream(format, buffer);
         if ((int)strcmp(found_item, info) == 0)
