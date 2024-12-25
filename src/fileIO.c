@@ -1,5 +1,5 @@
 #include "fileIO.h"
-#include "customer.h"
+#include "user.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-char *form_working_dir(struct Customer *user)
+char *form_working_dir(struct User *user)
 {
     assert(user);
     const size_t MAX_SIZE = 400;

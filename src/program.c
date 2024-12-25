@@ -1,7 +1,7 @@
 #include "program.h"
 #include "billing.h"
 #include "userService.h"
-#include "customer.h"
+#include "user.h"
 #include "fileIO.h"
 
 #include <stdio.h>
@@ -20,17 +20,15 @@ void exec(void)
 {
     printf("--Telecom Billing System--\n\n");
 
-    struct Customer *user = NULL;
+    struct User *user = NULL;
     char *working_dir = NULL;
-    unsigned char choice;
-
     bool run = true;
 
     while (run)
     {
         while (!user && run)
         {
-            (void)auth_menu();
+            // give user choice to login or register
             run = (bool)auth_handler(&user);
             if (!run)
             {
@@ -45,17 +43,17 @@ void exec(void)
                 working_dir = (char *)form_working_dir(user);
             }
 
-            (void)menu();
-            (void)scanf(" %c", &choice);
-            if (!map_choice(choice, working_dir))
+            (void)clean();
+            // user's choice will be mapped here so he can do the action he wants
+            if (!(bool)map_choice(working_dir))
             {
                 user = NULL;
-                free(working_dir);
+                (void)free(working_dir);
             }
             (void)clean();
         }
     }
-    printf("--Thank you for trying my program!\n");
+    (void)printf("--Thank you for trying my program!\n");
 }
 
 void auth_menu(void)
@@ -66,26 +64,39 @@ void auth_menu(void)
     (void)printf("q-Quit\n");
 }
 
-bool auth_handler(struct Customer **user)
+bool auth_handler(struct User **user)
 {
-    unsigned char c;
+    (void)auth_menu();
+
     bool stay = true;
-    if (scanf(" %c", &c) == 1)
+    bool valid_input = false;
+    unsigned char choice;
+
+    while (!valid_input)
     {
-        switch (c)
+        if ((int)scanf(" %c", &choice) != 1)
         {
-        case '1':
-            *user = (struct Customer *)login_user();
-            break;
-        case '2':
-            *user = (struct Customer *)register_user();
-            break;
-        case 'q':
-            stay = false;
-            break;
-        default:
-            break;
+            printf("Please enter a valid choice\n");
+            // empty input buffer
+            while (getchar() != '\n')
+                ;
         }
+        valid_input = true;
+    }
+
+    switch (choice)
+    {
+    case '1':
+        *user = (struct User *)login_user();
+        break;
+    case '2':
+        *user = (struct User *)register_user();
+        break;
+    case 'q':
+        stay = false;
+        break;
+    default:
+        break;
     }
     return stay;
 }
@@ -102,11 +113,26 @@ void menu(void)
     (void)printf("q-Quit\n");
 }
 
-bool map_choice(unsigned char c, const char *working_dir)
+bool map_choice(const char *working_dir)
 {
-    clean();
+    menu();
+    bool valid_input = false;
+    unsigned char choice;
+
+    while (!valid_input)
+    {
+        if ((int)scanf(" %c", &choice) != 1)
+        {
+            printf("Please enter a valid choice\n");
+            // empty input buffer
+            while (getchar() != '\n')
+                ;
+        }
+        valid_input = true;
+    }
+
     bool stay = true;
-    switch (c)
+    switch (choice)
     {
     case '1':
         (void)add_record(working_dir);

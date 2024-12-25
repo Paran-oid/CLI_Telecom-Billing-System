@@ -1,5 +1,5 @@
 #include "userService.h"
-#include "customer.h"
+#include "user.h"
 #include "fileIO.h"
 
 #include <stdio.h>
@@ -25,7 +25,7 @@ void *register_user(void)
         return NULL;
     }
 
-    struct Customer *user;
+    struct User *user;
     user = create_user(username, password);
     char user_str[70] = "";
     snprintf(user_str, sizeof(user_str), "%d", user->id);
@@ -64,7 +64,7 @@ void *login_user(void)
         return NULL;
     }
 
-    struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
+    struct User *user = (struct User *)malloc(sizeof(struct User));
 
     char *found_user = search_in_file(USERS_DIR, USERNAME, username);
 
@@ -99,10 +99,10 @@ void *login_user(void)
     return user;
 }
 
-struct Customer *create_user(char *username, char *password)
+struct User *create_user(char *username, char *password)
 {
     srand(time(NULL));
-    struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
+    struct User *user = (struct User *)malloc(sizeof(struct User));
 
     bool valid_id = false;
     char *user_id_str = malloc(sizeof(char) * (4 + 1));
@@ -132,7 +132,7 @@ struct Customer *create_user(char *username, char *password)
     return user;
 }
 
-void destroy_user(struct Customer *user)
+void destroy_user(struct User *user)
 {
     free(user->name);
     free(user->password);

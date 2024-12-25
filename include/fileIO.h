@@ -19,9 +19,9 @@ enum itemType
     TRANSACTION
 };
 
-struct Customer;
+struct User;
 
-char *form_working_dir(struct Customer *user);
+char *form_working_dir(struct User *user);
 
 bool file_write(const char *path, const char *val);
 void file_read(const char *path);
