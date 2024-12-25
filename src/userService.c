@@ -40,13 +40,18 @@ void *register_user(void)
     }
 
     (void)file_write(USERS_DIR, user_str);
+
+    (void)free(username);
+    (void)free(password);
+
     return user;
 }
+
 void *login_user(void)
 {
-    char id_str[4];
     char username[50];
     char password[20];
+
     (void)printf("enter a username:\n");
     if ((int)scanf("%50s", username) != 1)
     {
@@ -62,29 +67,30 @@ void *login_user(void)
 
     struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
 
-    char *user_str = search_user_in_file(USERS_DIR, username);
+    char *found_user = search_in_file(USERS_DIR, USERNAME, username, USER);
+    char user_str[100];
 
     if (!user)
     {
         (void)printf("Invalid credentials\n");
+        return NULL;
     }
 
-    // get user id
-    snprintf(id_str, sizeof(id_str), "%d", )
+    char *id_str = format_from_stream(ID, found_user);
 
-        (void) strcat(user_str, );
+    (void)strcat(user_str, id_str);
+    (void)strcat(user_str, " ");
     (void)strcat(user_str, username);
     (void)strcat(user_str, " ");
     (void)strcat(user_str, password);
 
-    if (!user)
+    if (!user || strcmp(user_str, found_user) != 0)
     {
-        (void)printf("Sorry we couldn't log you in :( \n");
+        (void)printf("Wrong Credentials, Please try again.");
     }
 
-    if (strcmp())
-
-        return user;
+    (void)free(found_user);
+    return user;
 }
 
 struct Customer *create_user(char *username, char *password)

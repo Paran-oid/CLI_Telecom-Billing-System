@@ -109,7 +109,7 @@ void modify_records(void)
     if ((int)scanf(" %d", &transc_id) == 1)
     {
         (void)snprintf(transc_id_str, sizeof(transc_id), "%d", transc_id);
-        found_item = (char *)search_item_file(RECORDS_DIR, transc_id_str);
+        found_item = (char *)search_in_file(RECORDS_DIR, ID, transc_id_str, TRANSACTION);
         if (!(found_item == NULL))
         {
             float new_item_val = 0.00f;
@@ -157,7 +157,7 @@ void modify_records(void)
                     (void)strcat(modified_transc, building_strs[i]);
                 }
 
-                if ((bool)replace_item_file(RECORDS_DIR, modified_transc, false))
+                if ((bool)replace_in_file(RECORDS_DIR, modified_transc, TRANSACTION, false))
                 {
                     (void)printf("success!\n");
                     (void)sleep(2);
@@ -188,7 +188,7 @@ void search_records(void)
     if ((int)scanf("%d", &id) == 1)
     {
         (void)snprintf(id_str, sizeof(id_str), "%d", id);
-        char *transc = (char *)search_item_file(RECORDS_DIR, id_str);
+        char *transc = (char *)search_in_file(RECORDS_DIR, ID, id_str, TRANSACTION);
         if (transc)
         {
             (void)printf("%s\n", transc);
@@ -212,10 +212,10 @@ void delete_records(void)
     if ((int)scanf("%d", &id) == 1)
     {
         (void)snprintf(id_str, sizeof(id_str), "%d", id);
-        char *transc = (char *)search_item_file(RECORDS_DIR, id_str);
+        char *transc = (char *)search_in_file(RECORDS_DIR, ID, id_str, TRANSACTION);
         if (transc)
         {
-            bool res = (bool)replace_item_file(RECORDS_DIR, transc, true);
+            bool res = (bool)replace_in_file(RECORDS_DIR, transc, TRANSACTION, true);
             (void)free(transc);
             if (res)
             {
