@@ -47,6 +47,7 @@ void exec(void)
             // user's choice will be mapped here so he can do the action he wants
             if (!(bool)map_choice(working_dir))
             {
+                destroy_user(user);
                 user = NULL;
                 (void)free(working_dir);
             }
@@ -76,9 +77,9 @@ bool auth_handler(struct User **user)
     {
         if ((int)scanf(" %c", &choice) != 1)
         {
-            printf("Please enter a valid choice\n");
+            (void)printf("Please enter a valid choice\n");
             // empty input buffer
-            while (getchar() != '\n')
+            while ((int)getchar() != '\n')
                 ;
         }
         valid_input = true;
@@ -115,7 +116,7 @@ void menu(void)
 
 bool map_choice(const char *working_dir)
 {
-    menu();
+    (void)menu();
     bool valid_input = false;
     unsigned char choice;
 

@@ -12,35 +12,42 @@ void *register_user(void)
     char *username = (char *)malloc(sizeof(char) * (50 + 1));
     char *password = (char *)malloc(sizeof(char) * (20 + 1));
 
-    printf("Enter a username:\n");
-    if (scanf("%50s", username) != 1)
+    (void)printf("Enter a username:\n");
+    if ((int)scanf("%50s", username) != 1)
     {
-        fprintf(stderr, "Invalid username\n");
+        (void)fprintf(stderr, "Invalid username\n");
         return NULL;
     }
-    printf("Enter a password:\n");
-    if (scanf("%20s", password) != 1)
+    (void)printf("Enter a password:\n");
+    if ((int)scanf("%20s", password) != 1)
     {
-        fprintf(stderr, "Invalid password\n");
+        (void)fprintf(stderr, "Invalid password\n");
         return NULL;
     }
 
-    struct User *user;
-    user = create_user(username, password);
+    struct User *user = create_user(username, password);
     char user_str[70] = "";
-    snprintf(user_str, sizeof(user_str), "%d", user->id);
-    strcat(user_str, " ");
-    strcat(user_str, user->name);
-    strcat(user_str, " ");
-    strcat(user_str, user->password);
-    strcat(user_str, "\n");
+
+    (void)snprintf(user_str, sizeof(user_str), "%d", user->id);
+
+    char *item_arr[] = {
+        " ",
+        user->name,
+        " ",
+        user->password,
+        "\n"};
+
+    for (size_t i = 0; i != sizeof(item_arr) / sizeof(item_arr[0]); i++)
+    {
+        (void)strcat(user_str, item_arr[i]);
+    }
 
     if (!user)
     {
-        fprintf(stderr, "There was an error creating your account\n");
+        (void)fprintf(stderr, "There was an error creating your account\n");
     }
 
-    file_write(USERS_DIR, user_str);
+    (void)file_write(USERS_DIR, user_str);
 
     return user;
 }
@@ -101,11 +108,11 @@ void *login_user(void)
 
 struct User *create_user(char *username, char *password)
 {
-    srand(time(NULL));
+    (void)srand((time_t)time(NULL));
     struct User *user = (struct User *)malloc(sizeof(struct User));
 
     bool valid_id = false;
-    char *user_id_str = malloc(sizeof(char) * (4 + 1));
+    char *user_id_str = (char *)malloc(sizeof(char) * (4 + 1));
 
     int offset = 0;
 
@@ -134,7 +141,7 @@ struct User *create_user(char *username, char *password)
 
 void destroy_user(struct User *user)
 {
-    free(user->name);
-    free(user->password);
-    free(user);
+    (void)free(user->name);
+    (void)free(user->password);
+    (void)free(user);
 }

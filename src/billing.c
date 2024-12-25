@@ -57,7 +57,7 @@ void add_record(const char *working_dir)
 
     (void)strcat(output, rec_id_str);
     (void)printf("Enter value\n");
-    if (scanf("%f", &rec.val) == 1)
+    if ((int)scanf("%f", &rec.val) == 1)
     {
         (void)snprintf(rec_value_str, sizeof(rec_value_str), "%.2f", rec.val);
         (void)strcat(output, " ");
@@ -94,12 +94,12 @@ void add_record(const char *working_dir)
         }
         else
         {
-            fprintf(stderr, "There was an error adding the record\n");
+            (void)fprintf(stderr, "There was an error adding the record\n");
         }
     }
     else
     {
-        fprintf(stderr, "Please verify your inputs\n");
+        (void)fprintf(stderr, "Please verify your inputs\n");
     }
 }
 
@@ -135,7 +135,7 @@ void modify_records(const char *working_dir)
             (void)scanf("%f", &new_item_val);
             (void)snprintf(new_item_val_str, sizeof(new_item_val_str), "%.2f", new_item_val);
             (void)printf("Enter new type (must be one of these)\n");
-            display_types();
+            (void)display_types();
             if (((int)scanf("%3s", new_item_type) == 1))
             {
                 bool found = false;

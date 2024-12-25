@@ -37,8 +37,8 @@ char *form_working_dir(struct User *user)
     }
     else
     {
-        fprintf(stderr, "Error: Combined length of TEMPLATE_RECORDS_DIR and user name exceeds limit.\n");
-        free(wd);
+        (void)fprintf(stderr, "Error: Combined length of TEMPLATE_RECORDS_DIR and user name exceeds limit.\n");
+        (void)free(wd);
         return NULL;
     }
 }
@@ -48,21 +48,21 @@ bool file_write(const char *path, const char *val)
     assert(path);
     assert(val);
 
-    FILE *f = fopen(path, "a");
+    FILE *f = (FILE *)fopen(path, "a");
     if (f == NULL)
     {
-        fprintf(stderr, "Error opening file\n");
+        (void)fprintf(stderr, "Error opening file\n");
         return false;
     }
 
-    if (fprintf(f, "%s", val) < 0)
+    if ((int)fprintf(f, "%s", val) < 0)
     {
-        fclose(f);
-        fprintf(stderr, "Error writing to file\n");
+        (void)fclose(f);
+        (void)fprintf(stderr, "Error writing to file\n");
         return false;
     }
 
-    fclose(f);
+    (void)fclose(f);
     return true;
 }
 
@@ -70,20 +70,20 @@ void file_read(const char *path)
 {
     assert(path);
 
-    FILE *f = fopen(path, "r");
+    FILE *f = (FILE *)fopen(path, "r");
 
     if (f == NULL)
     {
-        fprintf(stderr, "Error opening file/s\n");
+        (void)fprintf(stderr, "Error opening file/s\n");
         return;
     }
     char buffer[255];
 
-    while (fgets(buffer, sizeof(buffer), f))
+    while ((int)fgets(buffer, sizeof(buffer), f))
     {
         printf("%s\n", buffer);
     }
-    fclose(f);
+    (void)fclose(f);
 }
 
 char *search_in_file(const char *path, enum formatType format, const char *info)
@@ -91,11 +91,11 @@ char *search_in_file(const char *path, enum formatType format, const char *info)
     assert(info);
     assert(path);
 
-    FILE *f = fopen(path, "r");
+    FILE *f = (FILE *)fopen(path, "r");
 
     if (f == NULL)
     {
-        fprintf(stderr, "Error opening file/s\n");
+        (void)fprintf(stderr, "Error opening file/s\n");
         return NULL;
     }
 
@@ -103,10 +103,10 @@ char *search_in_file(const char *path, enum formatType format, const char *info)
 
     char buffer[255];
 
-    while (fgets(buffer, sizeof(buffer), f))
+    while ((int)fgets(buffer, sizeof(buffer), f))
     {
-        char *found_item = format_from_stream(format, buffer);
-        if (strcmp(found_item, info) == 0)
+        char *found_item = (char *)format_from_stream(format, buffer);
+        if ((int)strcmp(found_item, info) == 0)
         {
             found = true;
             break;
@@ -114,16 +114,16 @@ char *search_in_file(const char *path, enum formatType format, const char *info)
     }
     if (found)
     {
-        size_t len = strlen(buffer);
+        size_t len = (size_t)strlen(buffer);
         if (buffer[len - 1] == '\n')
         {
             buffer[len - 1] = '\0';
         }
-        char *buffer_copy = malloc(strlen(buffer) + 1);
+        char *buffer_copy = (char *)malloc(strlen(buffer) + 1);
 
         if (!buffer_copy)
         {
-            fprintf(stderr, "There was an error processing your transaction's string\n");
+            (void)fprintf(stderr, "There was an error processing your transaction's string\n");
             return NULL;
         }
 
@@ -132,7 +132,7 @@ char *search_in_file(const char *path, enum formatType format, const char *info)
         return buffer_copy;
     }
 
-    fclose(f);
+    (void)fclose(f);
     return NULL;
 }
 
@@ -202,7 +202,7 @@ char *format_from_stream(enum formatType format, const char *stream)
 
     if (format == USERNAME)
     {
-        char *ptr_fspace = strchr(stream, ' ');
+        char *ptr_fspace = (char *)strchr(stream, ' ');
 
         if (!ptr_fspace)
         {
@@ -217,8 +217,8 @@ char *format_from_stream(enum formatType format, const char *stream)
             curr++;
         }
 
-        char *username = malloc(51);
-        memcpy(username, stream + start, curr - start);
+        char *username = (char *)malloc(51);
+        (void *)memcpy(username, stream + start, curr - start);
         username[curr - start] = '\0';
 
         return username;
@@ -226,7 +226,7 @@ char *format_from_stream(enum formatType format, const char *stream)
 
     else if (format == ID)
     {
-        char *ptr_fspace = strchr(stream, ' ');
+        char *ptr_fspace = (char *)strchr(stream, ' ');
 
         if (!ptr_fspace)
         {
@@ -235,7 +235,7 @@ char *format_from_stream(enum formatType format, const char *stream)
         }
 
         size_t pos_fspace = ptr_fspace - stream;
-        char *found_id = malloc(5);
+        char *found_id = (char *)malloc(5);
 
         for (size_t i = 0; i < pos_fspace; i++)
         {
@@ -247,7 +247,7 @@ char *format_from_stream(enum formatType format, const char *stream)
 
     else
     {
-        fprintf(stderr, "Invalid stream\n");
+        (void)fprintf(stderr, "Invalid stream\n");
         return NULL;
     }
 }
