@@ -42,9 +42,6 @@ void *register_user(void)
 
     file_write(USERS_DIR, user_str);
 
-    free(username);
-    free(password);
-
     return user;
 }
 
@@ -69,7 +66,7 @@ void *login_user(void)
 
     struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
 
-    char *found_user = search_in_file(USERS_DIR, USERNAME, username, USER);
+    char *found_user = search_in_file(USERS_DIR, USERNAME, username);
 
     if (!found_user)
     {
@@ -106,9 +103,31 @@ struct Customer *create_user(char *username, char *password)
 {
     srand(time(NULL));
     struct Customer *user = (struct Customer *)malloc(sizeof(struct Customer));
-    user->id = 1 + (rand() % 1000);
+
+    bool valid_id = false;
+    char *user_id_str = malloc(sizeof(char) * (4 + 1));
+
+    int offset = 0;
+
+    while (!valid_id)
+    {
+        user->id = 1 + offset;
+
+        (void)snprintf(user_id_str, 5, "%u", user->id);
+        char *found_item = (char *)search_in_file(USERS_DIR, ID, user_id_str);
+
+        if (found_item == NULL)
+        {
+            valid_id = true;
+        }
+
+        offset += 1;
+    }
+
     user->name = username;
     user->password = password;
+
+    (void)free(user_id_str);
 
     return user;
 }

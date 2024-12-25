@@ -86,173 +86,111 @@ void file_read(const char *path)
     fclose(f);
 }
 
-char *search_in_file(const char *path, enum formatType format, const char *info, enum itemType item_type)
+char *search_in_file(const char *path, enum formatType format, const char *info)
 {
     assert(info);
     assert(path);
 
-    if (item_type == TRANSACTION)
+    FILE *f = fopen(path, "r");
+
+    if (f == NULL)
     {
-        if (format != ID)
-        {
-            fprintf(stderr, "Invalid format\n");
-            return NULL;
-        }
-
-        FILE *f = fopen(path, "r");
-
-        if (f == NULL)
-        {
-            fprintf(stderr, "Error opening file/s\n");
-            return NULL;
-        }
-
-        bool found = false;
-
-        char buffer[255];
-
-        while (fgets(buffer, sizeof(buffer), f))
-        {
-            char *found_id = format_from_stream(ID, buffer);
-            if (strcmp(found_id, info) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-        if (found)
-        {
-            size_t len = strlen(buffer);
-            if (buffer[len - 1] == '\n')
-            {
-                buffer[len - 1] = '\0';
-            }
-            char *buffer_copy = malloc(strlen(buffer) + 1);
-
-            if (!buffer_copy)
-            {
-                fprintf(stderr, "There was an error processing your transaction's string\n");
-                return NULL;
-            }
-
-            (void)strcpy(buffer_copy, buffer);
-            (void)fclose(f);
-            return buffer_copy;
-        }
-
-        fclose(f);
+        fprintf(stderr, "Error opening file/s\n");
         return NULL;
     }
 
-    else if (item_type == USER)
+    bool found = false;
+
+    char buffer[255];
+
+    while (fgets(buffer, sizeof(buffer), f))
     {
-        if (format != USERNAME)
+        char *found_item = format_from_stream(format, buffer);
+        if (strcmp(found_item, info) == 0)
         {
-            fprintf(stderr, "Invalid format\n");
+            found = true;
+            break;
+        }
+    }
+    if (found)
+    {
+        size_t len = strlen(buffer);
+        if (buffer[len - 1] == '\n')
+        {
+            buffer[len - 1] = '\0';
+        }
+        char *buffer_copy = malloc(strlen(buffer) + 1);
+
+        if (!buffer_copy)
+        {
+            fprintf(stderr, "There was an error processing your transaction's string\n");
             return NULL;
         }
 
-        FILE *f = fopen(USERS_DIR, "r");
-
-        bool found = false;
-        char *found_user = malloc(256);
-        char buffer[255];
-        while (fgets(buffer, sizeof(buffer), f))
-        {
-            const char *received_username = format_from_stream(USERNAME, buffer);
-            if (strcmp(received_username, info) == 0)
-            {
-                // we should be careful not to get \n
-                size_t len = strlen(buffer);
-                if (buffer[len - 1] == '\n')
-                {
-                    buffer[len - 1] = '\0';
-                }
-
-                memcpy(found_user, buffer, strlen(buffer));
-                found = true;
-                break;
-            }
-        }
-        fclose(f);
-        return found ? found_user : NULL;
+        (void)strcpy(buffer_copy, buffer);
+        (void)fclose(f);
+        return buffer_copy;
     }
 
-    else
-    {
-        fprintf(stderr, "Invalid data\n");
-        return NULL;
-    }
+    fclose(f);
+    return NULL;
 }
 
-bool replace_in_file(const char *path, const char *modified_item, enum itemType item_type, bool delete_mode)
+bool replace_in_file(const char *path, const char *modified_item, bool delete_mode)
 {
     assert(path);
     assert(modified_item);
 
-    if (item_type == TRANSACTION)
+    FILE *f_orig = (FILE *)fopen(path, "r");
+    FILE *f_copy = (FILE *)fopen(TEMP_DIR, "w");
+
+    if (f_orig == NULL || f_copy == NULL)
     {
+        fprintf(stderr, "Error opening file/s\n");
+        return false;
+    }
 
-        FILE *f_orig = fopen(path, "r");
-        FILE *f_copy = fopen(TEMP_DIR, "w");
+    char buffer[255];
+    char *specific_id = (char *)format_from_stream(ID, modified_item);
+    bool result = false;
 
-        if (f_orig == NULL || f_copy == NULL)
+    while ((char *)fgets(buffer, sizeof(buffer), f_orig))
+    {
+        char *found_id = (char *)format_from_stream(ID, buffer);
+        if ((int)strcmp(found_id, specific_id) == 0)
         {
-            fprintf(stderr, "Error opening file/s\n");
-            return false;
-        }
-
-        char buffer[255];
-        char *specific_id = format_from_stream(ID, modified_item);
-        bool result = false;
-
-        if (!delete_mode)
-        {
-            while (fgets(buffer, sizeof(buffer), f_orig))
+            if (!delete_mode)
             {
-                char *found_id = format_from_stream(ID, buffer);
-                if (strcmp(found_id, specific_id) == 0)
-                {
-                    if (!delete_mode)
-                    {
-                        fprintf(f_copy, "%s", modified_item);
-                    }
-                    result = true;
-                    continue;
-                }
-                fprintf(f_copy, "%s", buffer);
+                (void)fprintf(f_copy, "%s", modified_item);
             }
+            result = true;
+            continue;
         }
-        fclose(f_orig);
-        fclose(f_copy);
-
-        f_orig = fopen(path, "w");
-        f_copy = fopen(TEMP_DIR, "r");
-
-        if (f_orig == NULL || f_copy == NULL)
-        {
-            fprintf(stderr, "Error allocating memory\n");
-            return false;
-        }
-
-        while (fgets(buffer, sizeof(buffer), f_copy))
-        {
-            fprintf(f_orig, "%s", buffer);
-        }
-
-        fclose(f_orig);
-        fclose(f_copy);
-
-        remove(TEMP_DIR);
-
-        return result;
+        (void)fprintf(f_copy, "%s", buffer);
     }
+    (void)fclose(f_orig);
+    (void)fclose(f_copy);
 
-    else
+    f_orig = (FILE *)fopen(path, "w");
+    f_copy = (FILE *)fopen(TEMP_DIR, "r");
+
+    if (f_orig == NULL || f_copy == NULL)
     {
-        fprintf(stderr, "Invalid input\n");
-        return NULL;
+        fprintf(stderr, "Error allocating memory\n");
+        return false;
     }
+
+    while ((char *)fgets(buffer, sizeof(buffer), f_copy))
+    {
+        (void)fprintf(f_orig, "%s", buffer);
+    }
+
+    (void)fclose(f_orig);
+    (void)fclose(f_copy);
+
+    (void)remove(TEMP_DIR);
+
+    return result;
 }
 
 char *format_from_stream(enum formatType format, const char *stream)

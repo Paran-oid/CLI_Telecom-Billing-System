@@ -29,24 +29,33 @@ void display_types(void)
 
 void add_record(const char *working_dir)
 {
-    printf("working dir is%s\n", working_dir);
     assert(working_dir);
     (void)srand(time(NULL));
 
     char output[100];
     struct Record rec;
     bool success = false;
+    bool valid_id = false;
+    int offset = 0;
 
     char rec_id_str[3];
     char rec_value_str[10];
 
-    // TODO: ENTER A WHILE LOOP UNTIL THE ID IS NOT IN THE FILE!
+    // check if generated ID for TRANSC is valid
+    while (!valid_id)
+    {
+        rec.id = 1 + offset;
+        (void)snprintf(rec_id_str, sizeof(rec_id_str), "%d", rec.id);
+        char *found_item = (char *)search_in_file(working_dir, ID, rec_id_str);
 
-    rec.id = 1 + ((int)rand() % (100));
+        if (found_item == NULL)
+        {
+            valid_id = true;
+        }
+        offset++;
+    }
 
-    (void)snprintf(rec_id_str, sizeof(rec_id_str), "%d", rec.id);
     (void)strcat(output, rec_id_str);
-
     (void)printf("Enter value\n");
     if (scanf("%f", &rec.val) == 1)
     {
@@ -115,7 +124,7 @@ void modify_records(const char *working_dir)
     if ((int)scanf(" %d", &transc_id) == 1)
     {
         (void)snprintf(transc_id_str, sizeof(transc_id), "%d", transc_id);
-        found_item = (char *)search_in_file(working_dir, ID, transc_id_str, TRANSACTION);
+        found_item = (char *)search_in_file(working_dir, ID, transc_id_str);
         if (!(found_item == NULL))
         {
             float new_item_val = 0.00f;
@@ -162,8 +171,7 @@ void modify_records(const char *working_dir)
                     (void)strcat(modified_transc, building_strs[i]);
                 }
 
-                // TODO: make it successfully replace
-                if ((bool)replace_in_file(working_dir, modified_transc, TRANSACTION, false))
+                if ((bool)replace_in_file(working_dir, modified_transc, false))
                 {
                     (void)printf("Success!\n");
                     (void)sleep(2);
@@ -200,7 +208,7 @@ void search_records(const char *working_dir)
     if ((int)scanf("%d", &id) == 1)
     {
         (void)snprintf(id_str, sizeof(id_str), "%d", id);
-        char *transc = (char *)search_in_file(working_dir, ID, id_str, TRANSACTION);
+        char *transc = (char *)search_in_file(working_dir, ID, id_str);
         if (transc)
         {
             (void)printf("%s\n", transc);
@@ -222,18 +230,16 @@ void delete_records(const char *working_dir)
 {
     assert(working_dir);
 
-    // TODO: make it successfully delete
-
     int id;
     char id_str[3];
     (void)printf("Enter item id: \n");
     if ((int)scanf("%d", &id) == 1)
     {
         (void)snprintf(id_str, sizeof(id_str), "%d", id);
-        char *transc = (char *)search_in_file(working_dir, ID, id_str, TRANSACTION);
+        char *transc = (char *)search_in_file(working_dir, ID, id_str);
         if (transc)
         {
-            bool res = (bool)replace_in_file(working_dir, transc, TRANSACTION, true);
+            bool res = (bool)replace_in_file(working_dir, transc, true);
             (void)free(transc);
             if (res)
             {

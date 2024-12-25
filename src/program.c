@@ -24,27 +24,36 @@ void exec(void)
     char *working_dir = NULL;
     unsigned char choice;
 
-    while (true)
+    bool run = true;
+
+    while (run)
     {
-        while (!user)
+        while (!user && run)
         {
             (void)auth_menu();
-            (void)auth_handler(&user);
+            run = (bool)auth_handler(&user);
+            if (!run)
+            {
+                continue;
+            }
         }
 
-        if (!working_dir)
+        if (user)
         {
-            working_dir = (char *)form_working_dir(user);
-        }
+            if (!working_dir)
+            {
+                working_dir = (char *)form_working_dir(user);
+            }
 
-        (void)menu();
-        (void)scanf(" %c", &choice);
-        if (!map_choice(choice, working_dir))
-        {
-            free(working_dir);
-            break;
+            (void)menu();
+            (void)scanf(" %c", &choice);
+            if (!map_choice(choice, working_dir))
+            {
+                user = NULL;
+                free(working_dir);
+            }
+            (void)clean();
         }
-        (void)clean();
     }
     printf("--Thank you for trying my program!\n");
 }
@@ -54,11 +63,13 @@ void auth_menu(void)
     (void)printf("You must register/login!\n");
     (void)printf("1-Login\n");
     (void)printf("2-Register\n");
+    (void)printf("q-Quit\n");
 }
 
-void auth_handler(struct Customer **user)
+bool auth_handler(struct Customer **user)
 {
     unsigned char c;
+    bool stay = true;
     if (scanf(" %c", &c) == 1)
     {
         switch (c)
@@ -69,11 +80,14 @@ void auth_handler(struct Customer **user)
         case '2':
             *user = (struct Customer *)register_user();
             break;
+        case 'q':
+            stay = false;
+            break;
         default:
-            *user = NULL;
             break;
         }
     }
+    return stay;
 }
 
 void menu(void)
