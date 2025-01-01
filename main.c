@@ -1,5 +1,3 @@
 #include "program.h"
-int main(void)
-{
-    exec();
-}
+
+int main(void) { exec(); }
