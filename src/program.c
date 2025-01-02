@@ -17,6 +17,13 @@
 #include <windows.h>
 #endif
 
+// TODO: initialize input output thread here
+// TODO: make a thread for writing to files
+// TODO: make a queue for messages like in thread pool exercises
+// TODO: make tests
+
+// TODO: make documentation
+
 void exec(void) {
   (void)printf("--Telecom Billing System--\n\n");
 
@@ -68,7 +75,6 @@ bool auth_handler(struct User **user) {
   while (!valid_input) {
     if ((int)scanf(" %c", &choice) != 1) {
       (void)printf("Please enter a valid choice\n");
-      // empty input buffer
       while ((int)getchar() != '\n')
         ;
     }

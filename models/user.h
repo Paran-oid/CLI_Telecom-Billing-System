@@ -1,7 +1,7 @@
 #pragma once
 
-struct User {
+typedef struct User {
   unsigned int id;
   char *name;
   char *password;
-};
+} User;
